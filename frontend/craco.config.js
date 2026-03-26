@@ -19,6 +19,11 @@ module.exports = {
   webpack: {
     alias: {
       '@': resolve('src')
+    },
+    configure: (webpackConfig) => {
+      // 屏蔽 @huggingface/transformers 等 ESM 包触发的 import.meta 关键依赖警告
+      webpackConfig.module.unknownContextCritical = false
+      return webpackConfig
     }
   }
 }
