@@ -1,0 +1,13 @@
+root = true
+
+[*] #表示对所有文件生效
+cahrset = utf-8 #设置文件编码为utf-8
+indent_style = space #使用空格进行缩进
+indent_style = 2 #每次缩进使用2个空格
+end_of_line = lf #使用LF作为换行符
+trim_trailing_whitespace = true #删除行尾多余的空格
+insert_final_newline = true #文件末尾添加换行符
+
+[*.md] #表示仅对Markdown文件生效
+max_line_length = off
+trim_trailing_whitespace = false

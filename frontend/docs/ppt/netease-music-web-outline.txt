@@ -1,0 +1,90 @@
+网易云音乐 Web 项目讲解
+	作者：<你的名字>  日期：2026-02-03
+	一句话：用 React + TS 复刻网易云核心浏览与播放体验（推荐页 + 播放器 + 歌词同步）
+
+目录 / Agenda
+	1. 项目目标与演示范围
+	2. 技术栈与工程结构
+	3. 路由与页面组织
+	4. 请求层与状态管理
+	5. 播放器与歌词同步实现
+	6. 总结与可优化点
+
+项目目标 & 核心功能
+	目标：在 Web 端还原“发现音乐 → 点歌播放 → 歌词同步”的主链路
+	核心页面：发现(推荐/排行榜/歌单/电台/歌手/新碟)、我的、关注、下载
+	关键体验
+		推荐页：Banner、热门推荐、新碟上架、榜单
+		播放器：上一首/播放暂停/下一首、进度拖拽、播放模式（顺序/随机/单曲）
+		歌词：按时间同步展示（toast 方式提示当前行）
+
+技术栈 & 工程化
+	React 19 + TypeScript
+	React Router v7：路由懒加载（lazy + Suspense）
+	Redux Toolkit：跨组件/跨页面状态管理（recommend/player）
+	Axios 封装：统一请求入口 + 拦截器（HYRequest）
+	UI：Ant Design（Slider/message）+ styled-components + 雪碧图
+	构建：CRA + CRACO（支持 Less 等扩展）
+
+页面结构 & 路由
+	整体布局：Header + 路由内容区 + Footer + 全局 PlayerBar
+	路由树（见 src/router/index.tsx）
+		/discover
+			/recommend（默认）
+			/songs /ranking /djradio /artist /album
+		/mine /focus /download
+	特点：首屏只加载壳，子路由按需加载
+
+目录结构（怎么找代码）
+	src/views：页面级（discover/player/...）
+	src/components：可复用组件（header/footer/area-header/...）
+	src/service：网络请求封装（request/config）
+	src/store：Redux Store 入口（组合各模块 reducer + hooks）
+	src/utils：格式化、歌词解析等通用工具
+
+请求层：HYRequest（Axios 封装）
+	统一 axios.create：baseURL + timeout
+	拦截器
+		request：可统一加 token / 日志
+		response：直接返回 res.data，页面更干净
+	业务接口示例
+		/banner：轮播图
+		/personalized：热门推荐
+		/album/newest：新碟上架
+		/playlist/detail：榜单详情
+		/song/url、/song/detail、/lyric：播放器所需
+	说明：这些接口通常由本地 API 服务提供（如 NeteaseCloudMusicApi）
+
+状态管理：Redux Toolkit（数据如何流动）
+	store 组合（src/store/index.ts）
+		recommend：发现-推荐页数据（banners/hot/newAlbum/rankings/singers）
+		player：播放状态（currentSong/playlist/lyric/playMode/progress）
+	使用模式
+		组件 useEffect dispatch(thunk)
+		thunk 调 service 发请求
+		reducer 写入 state
+		组件 useSelector 自动刷新 UI
+
+播放器：AppPlayerBar（播放控制与进度）
+	常驻底栏（src/App.tsx 挂载 AppPlayerBar）
+	核心：<audio> + React state
+		切歌：先 pause + 重置，再请求 song url，最后 play
+		进度：onTimeUpdate → 计算 progress% → Slider 展示
+		拖拽：onChange/onChangeComplete → 设置 audio.currentTime
+		播放模式：顺序/随机/单曲（player.playMode）
+
+歌词：解析与同步（关键体验）
+	parseLyric：解析 LRC 的时间戳与 offset，生成 {time,text} 列表
+	兼容：过滤“演唱/作词/作曲...”等元信息行；处理异常时间戳
+	同步：在 onTimeUpdate 用二分查找匹配当前行，更新 lyricIndex
+	展示：使用 antd message.open(key='lyric') 常驻显示当前歌词行
+
+总结 & 可优化点（Q&A）
+	已实现：推荐页数据链路、榜单点歌、底栏播放器、歌词同步提示
+	可优化（示例）
+		请求层：baseURL 改为读取 REACT_APP_BASE_URL（避免硬编码）
+		播放器：补齐音量/歌单面板/播放队列管理、错误兜底与重试
+		歌词：做滚动歌词面板（而非 toast），支持高亮/定位
+		类型：为接口返回补充 TS 类型，减少 any
+	Q&A
+

@@ -1,0 +1,12 @@
+.DS_Store
+node_modules
+frontend/node_modules
+frontend/build
+*.log
+.idea
+.vscode
+.history
+examples/moddef.json
+bin
+anonymous_token
+.vercel
