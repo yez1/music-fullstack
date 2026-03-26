@@ -21,8 +21,12 @@ module.exports = {
       '@': resolve('src')
     },
     configure: (webpackConfig) => {
-      // 屏蔽 @huggingface/transformers 等 ESM 包触发的 import.meta 关键依赖警告
       webpackConfig.module.unknownContextCritical = false
+      // 屏蔽 @huggingface/transformers 触发的 import.meta 关键依赖警告
+      webpackConfig.ignoreWarnings = [
+        ...(webpackConfig.ignoreWarnings || []),
+        /Critical dependency/,
+      ]
       return webpackConfig
     }
   }
